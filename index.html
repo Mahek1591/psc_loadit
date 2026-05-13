@@ -1,329 +1,724 @@
 <style>
+
   * { box-sizing: border-box; }
+
   body, .sim-root { margin: 0; padding: 0; }
+
   .sim-root { font-family: var(--font-sans, sans-serif); width: 100%; background: transparent; }
+
   .sim-canvas { position: relative; width: 100%; }
 
+ 
+
   .top-bar {
+
     display: flex; align-items: center; gap: 10px; padding: 10px 14px 8px;
+
     border-bottom: 0.5px solid var(--color-border-tertiary);
+
     flex-wrap: wrap;
+
   }
+
   .top-bar-title {
+
     font-size: 13px; font-weight: 500; color: var(--color-text-primary);
+
     letter-spacing: 0.04em; text-transform: uppercase; flex: 1; min-width: 200px;
+
   }
+
   .mode-btns { display: flex; gap: 6px; }
+
   .mode-btn {
+
     font-size: 12px; font-weight: 500; padding: 5px 14px;
+
     border: 0.5px solid var(--color-border-secondary);
+
     border-radius: var(--border-radius-md, 8px);
+
     background: transparent; color: var(--color-text-secondary);
+
     cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+
   }
+
   .mode-btn:hover { background: var(--color-background-secondary); }
+
   .mode-btn.active-push { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+
   .mode-btn.active-pull { background: #D85A30; color: #fff; border-color: #D85A30; }
+
   .mode-btn.active-position { background: #BA7517; color: #fff; border-color: #BA7517; }
 
+ 
+
   .layout { display: flex; gap: 0; align-items: stretch; }
+
   .svg-wrap { flex: 1 1 0; min-width: 0; }
+
   .side-panel {
+
     width: 192px; flex-shrink: 0;
+
     border-left: 0.5px solid var(--color-border-tertiary);
+
     padding: 14px 14px 14px 14px;
+
     display: flex; flex-direction: column; gap: 10px;
+
   }
+
   .panel-mode-label {
+
     font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+
     text-transform: uppercase; color: var(--color-text-tertiary);
+
     margin-bottom: 2px;
+
   }
+
   .panel-mode-title {
+
     font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px;
+
   }
+
   .panel-desc {
+
     font-size: 12px; color: var(--color-text-secondary); line-height: 1.55;
+
   }
+
   .panel-icon {
+
     font-size: 28px; margin-bottom: 2px;
+
   }
+
   .panel-checklist { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 5px; }
+
   .panel-checklist li {
+
     font-size: 11px; color: var(--color-text-secondary); display: flex; align-items: flex-start; gap: 6px;
+
   }
+
   .panel-checklist li::before { content: "✓"; color: #1D9E75; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
 
+ 
+
   .disclaimer {
+
     font-size: 10px; color: var(--color-text-tertiary); border-top: 0.5px solid var(--color-border-tertiary);
+
     padding: 6px 14px; line-height: 1.5;
+
   }
+
+ 
+
+  /* Motion added so customer can actually see push / pull / positioning */
+
+  #load-group, #mag-head-group, #toolshaft {
+
+    transition: transform 0.45s ease, x2 0.45s ease, y2 0.45s ease;
+
+  }
+
+ 
 
   @media (max-width: 500px) {
+
     .side-panel { display: none; }
+
   }
+
 </style>
 
+ 
+
 <div class="sim-root">
+
   <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Industrial safety simulation showing a worker using a PSC Load-it Mag Head Tool to handle a staircase-shaped metal load inside a pit from a safe distance.</h2>
 
+ 
+
   <div class="top-bar">
+
     <div class="top-bar-title">PSC Load-it Mag Head — Safe Handling Simulation</div>
+
     <div class="mode-btns">
+
       <button class="mode-btn active-push" onclick="setMode('push')">Push</button>
+
       <button class="mode-btn" onclick="setMode('pull')">Pull</button>
+
       <button class="mode-btn" onclick="setMode('position')">Position</button>
+
     </div>
+
   </div>
+
+ 
 
   <div class="layout">
+
     <div class="svg-wrap">
+
       <svg id="mainsvg" width="100%" viewBox="0 0 480 370" role="img">
+
         <title>PSC Load-it Mag Head Tool — industrial safety simulation</title>
+
         <desc>Worker standing outside a pit uses a 4-metre magnetic push/pull tool to contact and control a staircase-shaped metal load, keeping hands clear of the hazard zone.</desc>
+
         <defs>
+
           <marker id="arr-grn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+
             <path d="M2 1L8 5L2 9" fill="none" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
           </marker>
+
           <marker id="arr-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+
             <path d="M2 1L8 5L2 9" fill="none" stroke="#D85A30" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
           </marker>
+
           <marker id="arr-amb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+
             <path d="M2 1L8 5L2 9" fill="none" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
           </marker>
+
           <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+
             <path d="M2 1L8 5L2 9" fill="none" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
           </marker>
+
           <marker id="arr-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+
             <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
           </marker>
+
         </defs>
 
+ 
+
         <!-- ─── Ground surface ─── -->
+
         <rect x="0" y="190" width="480" height="8" fill="#888780" opacity="0.25"/>
+
         <line x1="0" y1="190" x2="480" y2="190" stroke="#888780" stroke-width="0.5" opacity="0.5"/>
 
+ 
+
         <!-- ─── PIT / Hazard zone ─── -->
+
         <!-- Pit walls -->
+
         <rect x="168" y="198" width="232" height="148" rx="2" fill="#501313" opacity="0.13"/>
+
         <rect x="168" y="198" width="232" height="148" rx="2" fill="none" stroke="#A32D2D" stroke-width="1" stroke-dasharray="5 3"/>
+
         <!-- Pit side walls shading -->
+
         <rect x="168" y="198" width="10" height="148" fill="#A32D2D" opacity="0.18"/>
+
         <rect x="390" y="198" width="10" height="148" fill="#A32D2D" opacity="0.18"/>
+
         <!-- Pit floor -->
+
         <rect x="178" y="336" width="212" height="10" fill="#888780" opacity="0.35"/>
 
+ 
+
         <!-- HAZARD ZONE label -->
+
         <rect x="193" y="201" width="100" height="18" rx="3" fill="#A32D2D" opacity="0.9"/>
+
         <text x="243" y="213" text-anchor="middle" font-size="10" font-weight="500" fill="#fff" font-family="var(--font-sans,sans-serif)">⚠ HAZARD ZONE</text>
 
+ 
+
         <!-- ─── Staircase-shaped metal load ─── -->
+
+        <g id="load-group">
+
+ 
+
         <!-- Step 3 (top) -->
+
         <rect x="250" y="265" width="68" height="20" rx="1" fill="#EF9F27" stroke="#BA7517" stroke-width="1"/>
+
         <!-- Step 2 (mid) -->
+
         <rect x="230" y="285" width="88" height="20" rx="1" fill="#EF9F27" stroke="#BA7517" stroke-width="1"/>
+
         <!-- Step 1 (base) -->
+
         <rect x="208" y="305" width="110" height="22" rx="1" fill="#EF9F27" stroke="#BA7517" stroke-width="1"/>
+
         <!-- Hatch lines on load (metallic feel) -->
+
         <line x1="255" y1="265" x2="255" y2="285" stroke="#BA7517" stroke-width="0.5" opacity="0.5"/>
+
         <line x1="268" y1="265" x2="268" y2="285" stroke="#BA7517" stroke-width="0.5" opacity="0.5"/>
+
         <line x1="236" y1="285" x2="236" y2="305" stroke="#BA7517" stroke-width="0.5" opacity="0.5"/>
+
         <line x1="252" y1="285" x2="252" y2="305" stroke="#BA7517" stroke-width="0.5" opacity="0.5"/>
+
         <line x1="214" y1="305" x2="214" y2="327" stroke="#BA7517" stroke-width="0.5" opacity="0.5"/>
+
         <line x1="228" y1="305" x2="228" y2="327" stroke="#BA7517" stroke-width="0.5" opacity="0.5"/>
+
         <!-- LOAD label -->
+
         <text x="263" y="322" text-anchor="middle" font-size="9" fill="#412402" font-weight="500" font-family="var(--font-sans,sans-serif)">METAL LOAD</text>
 
+ 
+
+        </g>
+
+ 
+
         <!-- ─── Tool shaft ─── -->
+
         <!-- Shaft line from operator hand to mag head -->
+
         <line id="toolshaft" x1="88" y1="165" x2="248" y2="266" stroke="#5F5E5A" stroke-width="3.5" stroke-linecap="round"/>
+
         <line x1="88" y1="165" x2="248" y2="266" stroke="#D3D1C7" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
 
+ 
+
         <!-- ─── Magnetic head ─── -->
+
+        <g id="mag-head-group">
+
+ 
+
         <circle cx="248" cy="266" r="8" fill="#D85A30" stroke="#993C1D" stroke-width="1.2"/>
+
         <line x1="244" y1="263" x2="252" y2="269" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
+
         <line x1="252" y1="263" x2="244" y2="269" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
 
+ 
+
+        </g>
+
+ 
+
         <!-- ─── Operator (schematic figure) ─── -->
+
         <!-- Safe zone background -->
+
         <rect x="18" y="80" width="120" height="120" rx="6" fill="#1D9E75" opacity="0.08"/>
+
         <rect x="18" y="80" width="120" height="120" rx="6" fill="none" stroke="#1D9E75" stroke-width="0.5" stroke-dasharray="4 3"/>
 
+ 
+
         <!-- Body -->
+
         <rect x="70" y="138" width="18" height="38" rx="3" fill="#444441"/>
+
         <!-- Head -->
+
         <circle cx="79" cy="128" r="11" fill="#444441"/>
+
         <!-- Hard hat -->
+
         <path d="M68 124 Q79 112 90 124 L90 127 L68 127 Z" fill="#EF9F27" stroke="#BA7517" stroke-width="0.5"/>
+
         <rect x="65" y="126" width="28" height="3" rx="1" fill="#EF9F27" stroke="#BA7517" stroke-width="0.5"/>
+
         <!-- Arms: right arm pointing tool forward -->
+
         <line x1="79" y1="148" x2="88" y2="163" stroke="#444441" stroke-width="5" stroke-linecap="round"/>
+
         <!-- Left arm at side -->
+
         <line x1="79" y1="148" x2="68" y2="168" stroke="#444441" stroke-width="4" stroke-linecap="round"/>
+
         <!-- Legs -->
+
         <line x1="76" y1="176" x2="72" y2="196" stroke="#444441" stroke-width="5" stroke-linecap="round"/>
+
         <line x1="82" y1="176" x2="87" y2="196" stroke="#444441" stroke-width="5" stroke-linecap="round"/>
+
         <!-- Boots -->
+
         <rect x="66" y="193" width="12" height="5" rx="2" fill="#2C2C2A"/>
+
         <rect x="83" y="193" width="12" height="5" rx="2" fill="#2C2C2A"/>
 
+ 
+
         <!-- SAFE OPERATOR POSITION label -->
+
         <rect x="22" y="83" width="108" height="16" rx="3" fill="#1D9E75" opacity="0.85"/>
+
         <text x="76" y="94" text-anchor="middle" font-size="9" font-weight="500" fill="#fff" font-family="var(--font-sans,sans-serif)">SAFE OPERATOR ZONE</text>
 
+ 
+
         <!-- ─── Direction arrow (animated / changes with mode) ─── -->
+
         <!-- Push: arrow from operator towards load -->
+
         <g id="arrow-push">
+
           <line x1="115" y1="183" x2="155" y2="220" stroke="#1D9E75" stroke-width="2" marker-end="url(#arr-grn)" stroke-linecap="round"/>
+
           <line x1="127" y1="191" x2="167" y2="228" stroke="#1D9E75" stroke-width="2" marker-end="url(#arr-grn)" stroke-linecap="round" opacity="0.55"/>
+
         </g>
+
         <!-- Pull: arrow from load back towards operator -->
+
         <g id="arrow-pull" style="display:none">
+
           <line x1="165" y1="226" x2="125" y2="188" stroke="#D85A30" stroke-width="2" marker-end="url(#arr-red)" stroke-linecap="round"/>
+
           <line x1="155" y1="218" x2="115" y2="181" stroke="#D85A30" stroke-width="2" marker-end="url(#arr-red)" stroke-linecap="round" opacity="0.55"/>
+
         </g>
+
         <!-- Position: arc / rotate arrows -->
+
         <g id="arrow-position" style="display:none">
+
           <path d="M140 195 Q160 185 170 202" fill="none" stroke="#BA7517" stroke-width="2" marker-end="url(#arr-amb)" stroke-linecap="round"/>
+
           <path d="M140 210 Q120 220 115 204" fill="none" stroke="#BA7517" stroke-width="2" marker-end="url(#arr-amb)" stroke-linecap="round"/>
+
         </g>
+
+ 
 
         <!-- ─── Dimension line: 4 m shaft ─── -->
+
         <line x1="88" y1="157" x2="245" y2="258" stroke="#888780" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.6"/>
+
         <!-- 4m label -->
+
         <rect x="142" y="193" width="38" height="14" rx="3" fill="var(--color-background-primary, #fff)" opacity="0.88"/>
+
         <text x="161" y="203" text-anchor="middle" font-size="9.5" fill="#5F5E5A" font-family="var(--font-sans,sans-serif)" font-weight="500">≈ 4 m</text>
 
+ 
+
         <!-- ─── Labels ─── -->
+
         <!-- Tool label -->
+
         <line x1="162" y1="210" x2="162" y2="162" stroke="#5F5E5A" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.55"/>
+
         <rect x="96" y="148" width="132" height="14" rx="3" fill="var(--color-background-primary, #fff)" opacity="0.9"/>
+
         <text x="162" y="158" text-anchor="middle" font-size="9" fill="#3d3d3a" font-family="var(--font-sans,sans-serif)" font-weight="500">PSC LOAD-IT MAG HEAD TOOL</text>
 
+ 
+
         <!-- Magnetic contact label -->
+
         <line x1="248" y1="274" x2="220" y2="298" stroke="#993C1D" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.7"/>
+
         <rect x="170" y="296" width="110" height="14" rx="3" fill="var(--color-background-primary, #fff)" opacity="0.9"/>
+
         <text x="225" y="306" text-anchor="middle" font-size="9" fill="#A32D2D" font-family="var(--font-sans,sans-serif)" font-weight="500">MAGNETIC CONTACT POINT</text>
 
+ 
+
         <!-- Hands clear label -->
+
         <line x1="88" y1="163" x2="56" y2="152" stroke="#A32D2D" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.7"/>
+
         <rect x="0" y="140" width="90" height="18" rx="3" fill="#FCEBEB" opacity="0.95"/>
+
         <text x="45" y="148" text-anchor="middle" font-size="8.5" fill="#791F1F" font-family="var(--font-sans,sans-serif)" font-weight="500">⚠ HANDS CLEAR OF</text>
+
         <text x="45" y="157" text-anchor="middle" font-size="8.5" fill="#791F1F" font-family="var(--font-sans,sans-serif)" font-weight="500">LOAD / PINCH ZONE</text>
 
+ 
+
         <!-- Pit edge label -->
+
         <line x1="168" y1="194" x2="168" y2="180" stroke="#888780" stroke-width="0.5" opacity="0.5"/>
+
         <text x="168" y="175" text-anchor="middle" font-size="8.5" fill="#5F5E5A" font-family="var(--font-sans,sans-serif)">Pit edge</text>
 
+ 
+
         <!-- Ground line label -->
+
         <text x="460" y="188" text-anchor="end" font-size="8.5" fill="#5F5E5A" font-family="var(--font-sans,sans-serif)">Ground level</text>
 
+ 
+
         <!-- ─── Mode action label near load ─── -->
+
         <text id="mode-action-label" x="310" y="250" text-anchor="middle" font-size="9.5" font-weight="500" fill="#1D9E75" font-family="var(--font-sans,sans-serif)">▶ PUSHING LOAD</text>
 
+ 
+
       </svg>
+
     </div>
+
+ 
 
     <!-- Side panel -->
+
     <div class="side-panel">
+
       <div class="panel-mode-label">Current mode</div>
+
       <div id="panel-title" class="panel-mode-title">Push</div>
+
       <div id="panel-icon" class="panel-icon">▶</div>
+
       <div id="panel-desc" class="panel-desc">
+
         Operator applies forward force through the tool shaft, advancing the load to the desired position within the pit.
+
       </div>
+
       <ul class="panel-checklist" id="panel-list">
+
         <li>Operator stays outside pit</li>
+
         <li>Mag head contacts load</li>
+
         <li>Force applied along shaft axis</li>
+
         <li>No reach-over hazard</li>
+
       </ul>
 
+ 
+
       <div style="margin-top:auto; border-top: 0.5px solid var(--color-border-tertiary); padding-top:10px;">
+
         <div class="panel-mode-label" style="margin-bottom:4px">Tool specification</div>
+
         <div style="font-size:11px; color:var(--color-text-secondary); line-height:1.55;">
+
           <b style="font-weight:500;">PSC Load-it Mag Head</b><br>
+
           Shaft length: ≈ 4 m<br>
+
           Function: Push / Pull / Position<br>
+
           Contact: Permanent magnet head<br>
+
           Not a lifting tool
+
         </div>
+
       </div>
+
     </div>
+
   </div>
+
+ 
 
   <div class="disclaimer">
+
     ⓘ Conceptual application simulation only. This visualisation is for proposal and training purposes. The PSC Load-it Mag Head Tool is a push/pull/positioning tool — <strong style="font-weight:500;">it is not a certified lifting device</strong> and must not be used to lift loads overhead.
+
   </div>
+
 </div>
 
+ 
+
 <script>
+
 const modes = {
+
   push: {
+
     title: 'Push',
+
     icon: '▶',
+
     desc: 'Operator applies forward force through the shaft, advancing the load to the desired position within the pit.',
+
     list: ['Operator stays outside pit','Mag head contacts load','Force applied along shaft axis','No reach-over hazard'],
+
     actionLabel: '▶ PUSHING LOAD',
+
     labelColor: '#1D9E75',
+
     arrowEl: 'arrow-push',
-    btnClass: 'active-push'
+
+    btnClass: 'active-push',
+
+    loadTransform: 'translate(14 9)',
+
+    headTransform: 'translate(14 9)',
+
+    shaftEnd: { x2: 262, y2: 275 }
+
   },
+
   pull: {
+
     title: 'Pull',
+
     icon: '◀',
+
     desc: 'Operator retracts the tool to pull the load back, drawing it toward a safer extraction position without entering the pit.',
+
     list: ['Operator stays outside pit','Magnetic grip maintained','Load drawn back safely','No body enters hazard zone'],
+
     actionLabel: '◀ PULLING LOAD',
+
     labelColor: '#D85A30',
+
     arrowEl: 'arrow-pull',
-    btnClass: 'active-pull'
+
+    btnClass: 'active-pull',
+
+    loadTransform: 'translate(-12 -7)',
+
+    headTransform: 'translate(-12 -7)',
+
+    shaftEnd: { x2: 236, y2: 259 }
+
   },
+
   position: {
+
     title: 'Position',
+
     icon: '↻',
+
     desc: 'Fine rotational and lateral adjustments are made via the tool to align the load precisely — no workers in the pit at any time.',
+
     list: ['Precise alignment achieved','Operator outside hazard zone','Rotation via shaft leverage','Pinch zone inaccessible to hands'],
+
     actionLabel: '↻ POSITIONING LOAD',
+
     labelColor: '#BA7517',
+
     arrowEl: 'arrow-position',
-    btnClass: 'active-position'
+
+    btnClass: 'active-position',
+
+    loadTransform: 'rotate(-7 263 296)',
+
+    headTransform: 'rotate(-7 263 296)',
+
+    shaftEnd: { x2: 246, y2: 261 }
+
   }
+
 };
+
+ 
 
 let current = 'push';
 
+ 
+
+// Initialise the visual state so the load is already in Push mode when opened
+
+window.addEventListener('DOMContentLoaded', () => setMode('push'));
+
+ 
+
 function setMode(m) {
+
   const prev = modes[current];
+
   const next = modes[m];
+
   current = m;
 
+ 
+
   // Arrows
+
   ['arrow-push','arrow-pull','arrow-position'].forEach(id => {
+
     document.getElementById(id).style.display = 'none';
+
   });
+
   document.getElementById(next.arrowEl).style.display = '';
 
+ 
+
   // Action label
+
   const lbl = document.getElementById('mode-action-label');
+
   lbl.textContent = next.actionLabel;
+
   lbl.setAttribute('fill', next.labelColor);
 
+ 
+
+  // Move the load and the magnetic head so the simulation visibly responds
+
+  document.getElementById('load-group').setAttribute('transform', next.loadTransform);
+
+  document.getElementById('mag-head-group').setAttribute('transform', next.headTransform);
+
+ 
+
+  const shaft = document.getElementById('toolshaft');
+
+  shaft.setAttribute('x2', next.shaftEnd.x2);
+
+  shaft.setAttribute('y2', next.shaftEnd.y2);
+
+ 
+
   // Side panel
+
   document.getElementById('panel-title').textContent = next.title;
+
   document.getElementById('panel-icon').textContent = next.icon;
+
   document.getElementById('panel-desc').textContent = next.desc;
+
   const ul = document.getElementById('panel-list');
+
   ul.innerHTML = next.list.map(l => `<li>${l}</li>`).join('');
 
+ 
+
   // Buttons
+
   document.querySelectorAll('.mode-btn').forEach(btn => {
+
     btn.className = 'mode-btn';
+
   });
+
   document.querySelectorAll('.mode-btn').forEach(btn => {
+
     if (btn.textContent.trim().toLowerCase() === m) {
+
       btn.classList.add(next.btnClass);
+
     }
+
   });
+
 }
+
 </script>
+
